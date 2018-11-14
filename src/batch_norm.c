@@ -82,6 +82,12 @@ matrix delta_mean(matrix d, matrix variance, int spatial)
 {
     matrix dm = make_matrix(1, variance.cols);
     // TODO: 7.3 - calculate dL/dmean
+    int i, j;
+    for (i = 0; i < x.rows; ++i) {
+        for (j = 0; j < x.cols; ++j) {
+            dm.data[j/spatial] += d.data[i*x.cols + j] * -1 / sqrt(variance.data[j/spatial] + DBL_EPSILON);
+        }
+    }
     return dm;
 }
 
@@ -89,6 +95,12 @@ matrix delta_variance(matrix d, matrix x, matrix mean, matrix variance, int spat
 {
     matrix dv = make_matrix(1, variance.cols);
     // TODO: 7.4 - calculate dL/dvariance
+    int i, j;
+    for (i = 0; i < x.rows; ++i) {
+        for (j = 0; j < x.cols; ++j) {
+            dv.data[j/spatial] += d.data[i*x.cols + j] * (x.data[i*x.cols + j] - mean.data[j/spatial]) * -1/2 * pow(variance.data[j/spatial] + DBL_EPSILON, -3/2)
+        }
+    }
     return dv;
 }
 
