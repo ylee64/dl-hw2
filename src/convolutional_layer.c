@@ -2,6 +2,7 @@
 #include <math.h>
 #include <assert.h>
 #include "uwnet.h"
+#include "image.h"
 
 // Add bias terms to a matrix
 // matrix m: partially computed output of layer
@@ -49,7 +50,27 @@ matrix im2col(image im, int size, int stride)
     matrix col = make_matrix(rows, cols);
 
     // TODO: 5.1 - fill in the column matrix
+    int filter_center = size/2;
 
+    // we loop through the image using these 3 for loops 
+    for (int k = 0; k < im.c; k++) {
+        for (int j = 0; j < im.h; j += stride) {
+            for (int i = 0; i < im.w; i += stride) {
+                // these two for loops, loop through the contents of the filter square
+                for (int h = 0; h < size; h++) { 
+                    for (int w = 0; w < size; w++) {
+                        // for each location in the filter square for the i,j,k value, 
+                        // we want to find the corresponding value in the image and then place it into the 
+                        // correct location in the matrix
+                        float image_value = get_pixel(im, h - filter_center + j, w - filter_center + i, k);
+                        int setCol = i/stride + ((j/stride) * outw); 
+                        int setRow = k*size*size + h*size + w;
+                        col.data[setRow * cols + setCol] = image_value;
+                    }
+                }
+            }
+        }
+    }
     return col;
 }
 
@@ -66,7 +87,28 @@ void col2im(matrix col, int size, int stride, image im)
     int cols = outw * outh;
 
     // TODO: 5.2 - add values into image im from the column matrix
+     int filter_center = size/2;
 
+    // we loop through the image using these 3 for loops
+    for (int k = 0; k < im.c; k++) {
+        for (int j = 0; j < im.h; j++) {
+            for (int i = 0; i < im.w; i++) {
+                // these two for loops loops through the contents of the filter square
+                for (int h = 0; h < size; h++) {
+                    for (int w = 0; w < size; w++) {
+                        // for each pixel value in the filter, we want to add the 
+                        // corresponding value in the matrix, to whatever exists in the image
+                        // location currently
+                        int setCol = i/stride + ((j/stride) * outw); 
+                        int setRow = k*size*size + h*size + w;
+                        float matrix_value = col.data[setRow * cols + setCol];
+                        float image_value = get_pixel(im, h - filter_center + j, w - filter_center + i, k);
+                        set_pixel(im, h - filter_center + j, w - filter_center + i, k, matrix_value + image_value);
+                    }
+                }
+            }
+        }
+    }
 }
 
 // Run a convolutional layer on input
@@ -151,6 +193,12 @@ void backward_convolutional_layer(layer l, matrix prev_delta)
 void update_convolutional_layer(layer l, float rate, float momentum, float decay)
 {
     // TODO: 5.3 Update the weights, similar to the connected layer.
+    axpy_matrix(-1 * decay, l.w, l.dw);
+    axpy_matrix(rate, l.dw, l.w);
+    scal_matrix(momentum, l.dw);
+    axpy_matrix(-1 * decay, l.b, l.db);
+    axpy_matrix(rate, l.db, l.b);
+    scal_matrix(momentum, l.db);
 }
 
 // Make a new convolutional layer

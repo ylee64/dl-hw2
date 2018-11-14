@@ -16,7 +16,36 @@ matrix forward_maxpool_layer(layer l, matrix in)
     matrix out = make_matrix(in.rows, outw*outh*l.channels);
 
     // TODO: 6.1 - iterate over the input and fill in the output with max values
-
+    int stride = l.stride;
+    int kernel_size = l.size;    
+    int kernel_center = (l.size-1)/2;
+    for (int n = 0; n < in.rows; n++) {
+        for (int c = 0; c < l.channels; c++) {
+            for (int h = 0; h < l.height; h += stride) {
+                for (int w = 0; w < l.width; w += stride) {
+                    int image_index = n * in.cols;
+                    int channel_index = c * l.width * l.height;
+                    int original_index = image_index + channel_index + h * l.width + w;
+                    float max = in.data[original_index];
+                    for (int a = 0; a < kernel_size; a++) {
+                        for (int b = 0; b < kernel_size; b++) {
+                            int in_row = a - kernel_center;
+                            int in_col = b - kernel_center;
+                            int in_index = original_index + in_row * l.width + in_col;
+                            if (in_row + h >= 0 && in_row + h < l.height && in_col + w >= 0 && in_col + w < l.width) {
+                                float in_value = in.data[in_index]; //gets the corresponsing value from the in matrix
+                                if (in_value > max) {
+                                    max = in_value;
+                                }
+                            } 
+                        }
+                    }   
+                    int out_index =  (n * out.cols) + (c * outw * outh) + ((h/stride) * outw) + (w/stride);
+                    out.data[out_index] = max; // set the correct location on the out matrix to the max value            
+                }
+            }
+        }  
+    }
     l.in[0] = in;
     free_matrix(l.out[0]);
     l.out[0] = out;
@@ -30,6 +59,7 @@ matrix forward_maxpool_layer(layer l, matrix in)
 // matrix prev_delta: error term for the previous layer
 void backward_maxpool_layer(layer l, matrix prev_delta)
 {
+    
     matrix in    = l.in[0];
     matrix out   = l.out[0];
     matrix delta = l.delta[0];
@@ -40,7 +70,41 @@ void backward_maxpool_layer(layer l, matrix prev_delta)
     // TODO: 6.2 - find the max values in the input again and fill in the
     // corresponding delta with the delta from the output. This should be
     // similar to the forward method in structure.
+    int stride = l.stride;
+    int kernel_size = l.size;    
+    int kernel_center = (l.size)/2;
+    for (int n = 0; n < in.rows; n++) {
+        for (int c = 0; c < l.channels; c++) {
+            for (int h = 0; h < l.height; h += stride) {
+                for (int w = 0; w < l.width; w += stride) {
+                    int out_index =  (n * out.cols) + (c * outw * outh) + ((h/stride) * outw) + (w/stride);
+                    float max_value = out.data[out_index];
+                    int max_index = 0;
+                    int found = 0;
+                    for (int a = 0; a < kernel_size; a++) {
+                        for (int b = 0; b < kernel_size; b++) {
+                            int in_row = a - kernel_center + h;
+                            int in_col = b - kernel_center + w;
+                            int in_index = (n * in.cols) + c * l.width * l.height + in_row * l.width + in_col;
+                            if (in_row >= 0 && in_row < l.height && in_col >= 0 && in_col < l.width) {
+                                float in_value = in.data[in_index]; //gets the corresponsing value from the in matrix
+                                if (in_value == max_value) {
+                                    max_index = in_index; // keeps track of the index for the max value
+                                    found = 1;
+                                    break;
+                                }
+                            } 
+                        }
+                        if (found == 1) {
+                            break;
+                        }
+                    }   
+                    prev_delta.data[max_index] += delta.data[out_index];
 
+                }
+            }
+        }  
+    }
 }
 
 // Update maxpool layer
