@@ -23,6 +23,15 @@ matrix variance(matrix x, matrix m, int spatial)
 {
     matrix v = make_matrix(1, x.cols/spatial);
     // TODO: 7.1 - calculate variance
+    int i, j;
+    for(i = 0; i < x.rows; ++i) {
+        for(j = 0; j < x.cols; ++j) {
+            v.data[j/spatial] += pow(x.data[i*x.dols +j] - m.data[j/spatial], 2)
+        }
+    }
+    for(i = 0; i < v.cols; ++i) {
+        v.data[i] = m.data[i] / x.rows / spatial;
+    }
     return v;
 }
 
