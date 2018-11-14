@@ -120,4 +120,3 @@ layer make_connected_layer(int inputs, int outputs, ACTIVATION activation)
     l.rolling_variance = make_matrix(1, outputs);
     return l;
 }
-

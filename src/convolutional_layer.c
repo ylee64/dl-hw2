@@ -237,8 +237,7 @@ layer make_convolutional_layer(int w, int h, int c, int filters, int size, int s
     l.backward = backward_convolutional_layer;
     l.update   = update_convolutional_layer;
     l.x = calloc(1, sizeof(matrix));
-    l.rolling_mean = make_matrix(1, size*size*c);
-    l.rolling_variance = make_matrix(1, size*size*c);
+    l.rolling_mean = make_matrix(1, c);
+    l.rolling_variance = make_matrix(1, c);
     return l;
 }
-
