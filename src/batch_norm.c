@@ -25,12 +25,12 @@ matrix variance(matrix x, matrix m, int spatial)
     matrix v = make_matrix(1, x.cols/spatial);
     // TODO: 7.1 - calculate variance
     int i, j;
-    for(i = 0; i < x.rows; ++i) {
-        for(j = 0; j < x.cols; ++j) {
-            v.data[j/spatial] += pow(x.data[i*x.cols + j] - m.data[j/spatial], 2)
+    for (i = 0; i < x.rows; ++i) {
+        for (j = 0; j < x.cols; ++j) {
+            v.data[j/spatial] += pow(x.data[i*x.cols + j] - m.data[j/spatial], 2);
         }
     }
-    for(i = 0; i < v.cols; ++i) {
+    for (i = 0; i < v.cols; ++i) {
         v.data[i] = m.data[i] / x.rows / spatial;
     }
     return v;
@@ -41,9 +41,9 @@ matrix normalize(matrix x, matrix m, matrix v, int spatial)
     matrix norm = make_matrix(x.rows, x.cols);
     // TODO: 7.2 - normalize array, norm = (x - mean) / sqrt(variance + eps)
     int i, j;
-    for(i = 0; i < x.rows; ++i) {
-        for(j = 0; j < x.cols; ++j) {
-            norm.data[i*x.cols + j] = (x.data[i*x.cols + j] - m.data[j/spatial]) / sqrt(v.data[j/spatial] + DBL_EPSILON)
+    for (i = 0; i < x.rows; ++i) {
+        for (j = 0; j < x.cols; ++j) {
+            norm.data[i*x.cols + j] = (x.data[i*x.cols + j] - m.data[j/spatial]) / sqrt(v.data[j/spatial] + DBL_EPSILON);
         }
     }
     return norm;

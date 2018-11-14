@@ -131,6 +131,10 @@ matrix forward_convolutional_layer(layer l, matrix in)
         free_matrix(x);
         free_matrix(wx);
     }
+    if (l.batchnorm) {
+        matrix xnorm = batch_normalize_forward(l, out);
+        out = xnorm;
+    }
     forward_convolutional_bias(out, l.b);
     activate_matrix(out, l.activation);
 
@@ -227,6 +231,9 @@ layer make_convolutional_layer(int w, int h, int c, int filters, int size, int s
     l.forward  = forward_convolutional_layer;
     l.backward = backward_convolutional_layer;
     l.update   = update_convolutional_layer;
+    l.x = calloc(1, sizeof(matrix));
+    l.rolling_mean = make_matrix(1, size*size*c);
+    l.rolling_variance = make_matrix(1, size*size*c);
     return l;
 }
 
