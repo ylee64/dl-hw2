@@ -73,6 +73,11 @@ void backward_connected_layer(layer l, matrix prev_delta)
     backward_bias(delta, l.db);
     // Then calculate dL/dw. Use axpy to add this dL/dw into any previously stored
     // updates for our weights, which are stored in l.dw
+    if (l.batchnorm) {
+        matrix dx = batch_normalize_backward(l, delta);
+        free_matrix(delta);
+        l.delta[0] = delta = dx;
+    }
     matrix dl_dw = matmul(transpose_matrix(in), delta);
     axpy_matrix(1, dl_dw, l.dw);
     if(prev_delta.data){

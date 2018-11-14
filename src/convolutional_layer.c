@@ -160,6 +160,11 @@ void backward_convolutional_layer(layer l, matrix prev_delta)
 
     gradient_matrix(out, l.activation, delta);
     backward_convolutional_bias(delta, l.db);
+    if (l.batchnorm) {
+        matrix dx = batch_normalize_backward(l, delta);
+        free_matrix(delta);
+        l.delta[0] = delta = dx;
+    }
     int i;
     matrix wt = transpose_matrix(l.w);
     for(i = 0; i < in.rows; ++i){
