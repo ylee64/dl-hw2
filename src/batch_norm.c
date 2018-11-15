@@ -24,6 +24,7 @@ matrix variance(matrix x, matrix m, int spatial)
 {
     matrix v = make_matrix(1, x.cols/spatial);
     // TODO: 7.1 - calculate variance
+
     int i, j;
     for (i = 0; i < x.rows; ++i) {
         for (j = 0; j < x.cols; ++j) {
@@ -31,7 +32,7 @@ matrix variance(matrix x, matrix m, int spatial)
         }
     }
     for (i = 0; i < v.cols; ++i) {
-        v.data[i] = m.data[i] / x.rows / spatial;
+        v.data[i] = v.data[i] / x.rows / spatial;
     }
     return v;
 }
@@ -52,7 +53,6 @@ matrix normalize(matrix x, matrix m, matrix v, int spatial)
 
 matrix batch_normalize_forward(layer l, matrix x)
 {
-    //printf("forward");
     float s = .1;
     int spatial = x.cols / l.rolling_mean.cols;
     if (x.rows == 1){
@@ -97,9 +97,10 @@ matrix delta_variance(matrix d, matrix x, matrix mean, matrix variance, int spat
     matrix dv = make_matrix(1, variance.cols);
     // TODO: 7.4 - calculate dL/dvariance
     int i, j;
-    for (i = 0; i < x.rows; ++i) {
-        for (j = 0; j < x.cols; ++j) {
-            dv.data[j/spatial] += d.data[i*x.cols + j] * (x.data[i*x.cols + j] - mean.data[j/spatial]) * -1/2 * pow(variance.data[j/spatial] + FLT_EPSILON, -3/2);
+    for (i = 0; i < d.rows; ++i) {
+        for (j = 0; j < d.cols; ++j) {
+            int index = i*x.cols + j;
+            dv.data[j/spatial] += -d.data[index] * (x.data[index] - mean.data[j/spatial]) * pow(variance.data[j/spatial] + FLT_EPSILON, -1.5) / 2;
         }
     }
     return dv;
@@ -112,10 +113,11 @@ matrix delta_batch_norm(matrix d, matrix dm, matrix dv, matrix mean, matrix vari
     // TODO: 7.5 - calculate dL/dx
     for (i = 0; i < d.rows; ++i) {
         for (j =  0; j < d.cols; ++j) {
-            float first_term = d.data[i*d.cols + j] * 1 / sqrt(variance.data[j/spatial] + FLT_EPSILON);
-            float second_term = dv.data[j/spatial] * 2 * (x.data[i*d.cols + j] - mean.data[j/spatial]) / d.rows / spatial;
+            int index = i*d.cols + j;
+            float first_term = d.data[index] / sqrt(variance.data[j/spatial] + FLT_EPSILON);
+            float second_term = dv.data[j/spatial] * 2.0 * (x.data[index] - mean.data[j/spatial]) / d.rows / spatial;
             float third_term = dm.data[j/spatial] / d.rows / spatial;
-            dx.data[i*d.cols + j] = first_term + second_term + third_term;
+            dx.data[index] = first_term + second_term + third_term;
         }
     }
     return dx;
