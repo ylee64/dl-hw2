@@ -47,14 +47,21 @@ float cross_entropy_loss(matrix y, layer l)
 
 void train_image_classifier(net m, data d, int batch, int iters, float rate, float momentum, float decay)
 {
+    FILE *fp;
+    fp = fopen( "batchNorm_0.1_lr_0.8.txt", "a");
+    fprintf(fp, "lr: %f\n", rate);
     int e;
     for(e = 0; e < iters; ++e){
         data b = random_batch(d, batch);
         forward_net(m, b.X);
         float err = cross_entropy_loss(b.y, m.layers[m.n-1]);
         fprintf(stderr, "%06d: Loss: %f\n", e, err);
+        if (e % 100 == 0) {
+            fprintf(fp, "%06d\t%f\n", e, err);
+        }
         backward_net(m);
         update_net(m, rate/batch, momentum, decay);
         free_data(b);
     }
+    fclose(fp);
 }
